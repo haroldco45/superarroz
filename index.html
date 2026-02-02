@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DISTRILECO - Ventas SUPER ARROZ</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root { --primary: #0056b3; --secondary: #e63946; --light: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--light); }
+        header { background: white; padding: 1rem; text-align: center; border-bottom: 3px solid var(--primary); }
+        .logo { max-width: 150px; }
+        .container { max-width: 600px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .product-img { width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-send { background: #25d366; color: white; margin-top: 1rem; }
+        .btn-admin { background: #6c757d; color: white; margin-top: 2rem; }
+        .admin-section { display: none; margin-top: 2rem; border-top: 2px solid #eee; padding-top: 1rem; }
+        #reloj { font-size: 0.9rem; color: #666; margin-bottom: 1rem; text-align: right; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.8rem; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="logodistrileco.JPG" alt="Logo Distrileco" class="logo">
+    <h1>DISTRILECO S.A.S</h1>
+</header>
+
+<div class="container">
+    <div id="reloj">Cargando hora de Colombia...</div>
+    
+    <div style="text-align: center;">
+        <img src="sas.JPG" alt="Super Arroz" class="product-img" id="imgProducto">
+        <h2 id="nombreProd">SUPER ARROZ</h2>
+    </div>
+
+    <div class="form-group">
+        <label>Nombre del Cliente:</label>
+        <input type="text" id="cliente" placeholder="Ej: Juan Pérez">
+    </div>
+    <div class="form-group">
+        <label>Dirección:</label>
+        <input type="text" id="direccion" placeholder="Calle 123 #45-67">
+    </div>
+    <div class="form-group">
+        <label>Celular:</label>
+        <input type="tel" id="celular" placeholder="3110000000">
+    </div>
+    <div class="form-group">
+        <label>Cantidad (500g):</label>
+        <input type="number" id="cantidad" value="1" min="1">
+    </div>
+
+    <button class="btn-send" onclick="registrarVenta()">Generar Venta y WhatsApp</button>
+    
+    <button class="btn-admin" onclick="toggleAdmin()">Panel Administrador</button>
+
+    <div id="adminPanel" class="admin-section">
+        <h3>Gestión Administrativa</h3>
+        <button onclick="exportarExcel()" style="background: #1d6f42; color: white; margin-bottom: 5px;">Descargar Reporte Excel</button>
+        <button onclick="descargarBackup()" style="background: #007bff; color: white;">Descargar Backup JSON</button>
+        
+        <table id="tablaVentas">
+            <thead>
+                <tr>
+                    <th>Fecha/Hora</th>
+                    <th>Cliente</th>
+                    <th>Producto</th>
+                    <th>Cant</th>
+                </tr>
+            </thead>
+            <tbody id="listaVentas"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Persistencia de datos
+    let ventas = JSON.parse(localStorage.getItem('ventasDistrileco')) || [];
+
+    // Reloj Colombia
+    setInterval(() => {
+        const ahora = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
+        document.getElementById('reloj').innerText = "Colombia: " + ahora;
+    }, 1000);
+
+    function registrarVenta() {
+        const cliente = document.getElementById('cliente').value;
+        const direccion = document.getElementById('direccion').value;
+        const celular = document.getElementById('celular').value;
+        const cantidad = document.getElementById('cantidad').value;
+        const fechaHora = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
+
+        if(!cliente || !celular) return alert("Por favor llene los datos del cliente");
+
+        const nuevaVenta = { fechaHora, cliente, direccion, celular, producto: "SUPER ARROZ 500g", cantidad };
+        ventas.push(nuevaVenta);
+        localStorage.setItem('ventasDistrileco', JSON.stringify(ventas));
+
+        // Enviar a WhatsApp
+        const mensaje = `*DISTRILECO - NUEVO PEDIDO*%n*Fecha:* ${fechaHora}%n*Cliente:* ${cliente}%n*Dirección:* ${direccion}%n*Celular:* ${celular}%n*Producto:* SUPER ARROZ%n*Cantidad:* ${cantidad}`;
+        window.open(`https://wa.me/573117700431?text=${encodeURIComponent(mensaje.replace(/%n/g, '\n'))}`);
+        
+        actualizarTabla();
+        alert("Venta registrada con éxito");
+    }
+
+    function actualizarTabla() {
+        const tbody = document.getElementById('listaVentas');
+        tbody.innerHTML = "";
+        ventas.forEach(v => {
+            const fila = `<tr><td>${v.fechaHora}</td><td>${v.cliente}</td><td>${v.producto}</td><td>${v.cantidad}</td></tr>`;
+            tbody.innerHTML += fila;
+        });
+    }
+
+    function exportarExcel() {
+        const ws = XLSX.utils.json_to_sheet(ventas);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Ventas");
+        XLSX.writeFile(wb, "Reporte_Ventas_Distrileco.xlsx");
+    }
+
+    function descargarBackup() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(ventas));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "backup_distrileco.json");
+        downloadAnchorNode.click();
+    }
+
+    function toggleAdmin() {
+        const panel = document.getElementById('adminPanel');
+        const pass = prompt("Ingrese clave de administrador:");
+        if(pass === "1234") { // Clave simple de ejemplo
+            panel.style.display = panel.style.display === "block" ? "none" : "block";
+            actualizarTabla();
+        } else {
+            alert("Acceso denegado");
+        }
+    }
+</script>
+
+</body>
+</html>
