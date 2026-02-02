@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DISTRILECO S.A.S - Gestión de Ventas</title>
+    <title>DISTRILECO CAUCASIA SAS - Ventas</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #0056b3; --success: #25d366; --danger: #e63946; --dark: #2c3e50; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; }
         header { background: white; padding: 1rem; text-align: center; border-bottom: 4px solid var(--primary); }
         .logo-principal { max-width: 150px; height: auto; }
-        .container { max-width: 600px; margin: 1.5rem auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .container { max-width: 600px; margin: 1rem auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         #reloj { text-align: right; font-weight: bold; color: var(--primary); margin-bottom: 10px; font-size: 0.9rem; }
         .product-card { text-align: center; border: 1px solid #eee; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
         .product-img { width: 100%; max-height: 200px; object-fit: contain; }
@@ -23,24 +23,26 @@
         .admin-panel { display: none; margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 5px; text-align: left; }
-        .btn-edit { background: #ffc107; color: black; width: auto; padding: 4px 8px; font-size: 0.7rem; }
-        .btn-del { background: var(--danger); color: white; width: auto; padding: 4px 8px; font-size: 0.7rem; }
-        .btn-excel-inv { background: #17a2b8; color: white; width: auto; padding: 4px 8px; font-size: 0.7rem; }
+        .actions { display: flex; gap: 4px; }
+        .btn-edit { background: #ffc107; color: black; padding: 4px 8px; font-size: 0.7rem; width: auto; }
+        .btn-del { background: var(--danger); color: white; padding: 4px 8px; font-size: 0.7rem; width: auto; }
+        .btn-factura { background: #17a2b8; color: white; padding: 4px 8px; font-size: 0.7rem; width: auto; }
     </style>
 </head>
 <body>
 
 <header>
     <img src="logodistrileco.JPG" alt="DISTRILECO" class="logo-principal">
-    <div style="font-weight: bold; color: var(--primary);">DISTRILECO S.A.S</div>
+    <div style="font-weight: bold; color: var(--primary); font-size: 1.2rem;">DISTRILECO CAUCASIA SAS</div>
+    <div style="font-size: 0.8rem; color: #666;">NIT: 800183056-9 | Cel: 3206134987</div>
 </header>
 
 <div class="container">
-    <div id="reloj">Cargando...</div>
+    <div id="reloj">Cargando hora...</div>
 
     <div class="product-card">
         <img src="sas.JPG" alt="SUPER ARROZ" class="product-img">
-        <h2 style="margin:5px;">SUPER ARROZ</h2>
+        <h2 style="margin:5px;">SUPER ARROZ (500g)</h2>
     </div>
 
     <div class="form-group">
@@ -83,7 +85,7 @@
 </div>
 
 <script>
-    let ventas = JSON.parse(localStorage.getItem('db_distrileco')) || [];
+    let ventas = JSON.parse(localStorage.getItem('db_distrileco_caucasia_v2')) || [];
 
     // Reloj Colombia
     setInterval(() => {
@@ -98,13 +100,13 @@
         const cantidad = document.getElementById('cantidad').value;
         const fecha = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
 
-        if(!nombre || !celular) return alert("Datos incompletos");
+        if(!nombre || !celular) return alert("Por favor ingresa nombre y celular.");
 
         const pedido = { id: Date.now(), fecha, nombre, direccion, celular, producto: "SUPER ARROZ", cantidad };
         ventas.push(pedido);
-        localStorage.setItem('db_distrileco', JSON.stringify(ventas));
+        localStorage.setItem('db_distrileco_caucasia_v2', JSON.stringify(ventas));
 
-        const msg = `*DISTRILECO S.A.S*%n*PEDIDO:* SUPER ARROZ%n*CLIENTE:* ${nombre}%n*DIR:* ${direccion}%n*TEL:* ${celular}%n*CANT:* ${cantidad}%n*FECHA:* ${fecha}`;
+        const msg = `*DISTRILECO CAUCASIA SAS*%n*PEDIDO:* SUPER ARROZ%n*CLIENTE:* ${nombre}%n*DIR:* ${direccion}%n*TEL:* ${celular}%n*CANT:* ${cantidad}%n*FECHA:* ${fecha}`;
         window.open(`https://wa.me/573117700431?text=${encodeURIComponent(msg.replace(/%n/g, '\n'))}`);
         
         limpiarCampos();
@@ -127,50 +129,49 @@
                     <td>${v.fecha}</td>
                     <td>${v.nombre}</td>
                     <td>${v.cantidad}</td>
-                    <td>
+                    <td class="actions">
                         <button class="btn-edit" onclick="editarPedido(${index})">✎</button>
                         <button class="btn-del" onclick="borrarPedido(${index})">X</button>
-                        <button class="btn-excel-inv" onclick="exportarFacturaUnica(${index})">Excel</button>
+                        <button class="btn-factura" onclick="exportarFacturaIndividual(${index})">Factura</button>
                     </td>
                 </tr>`;
         });
     }
 
     function borrarPedido(index) {
-        if(confirm("¿Eliminar registro?")) {
+        if(confirm("¿Eliminar este registro?")) {
             ventas.splice(index, 1);
-            localStorage.setItem('db_distrileco', JSON.stringify(ventas));
+            localStorage.setItem('db_distrileco_caucasia_v2', JSON.stringify(ventas));
             actualizarTabla();
         }
     }
 
     function editarPedido(index) {
         const v = ventas[index];
-        const nuevoNombre = prompt("Nombre:", v.nombre);
-        const nuevaCant = prompt("Cantidad:", v.cantidad);
-        if(nuevoNombre) {
-            ventas[index].nombre = nuevoNombre;
-            ventas[index].cantidad = nuevaCant;
-            localStorage.setItem('db_distrileco', JSON.stringify(ventas));
+        const n = prompt("Nombre:", v.nombre);
+        const c = prompt("Cantidad:", v.cantidad);
+        if(n !== null) {
+            ventas[index].nombre = n;
+            ventas[index].cantidad = c;
+            localStorage.setItem('db_distrileco_caucasia_v2', JSON.stringify(ventas));
             actualizarTabla();
         }
     }
 
-    // FORMATO 1: Reporte General
     function exportarReporteGeneral() {
         const ws = XLSX.utils.json_to_sheet(ventas);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Ventas Totales");
-        XLSX.writeFile(wb, "Reporte_General_Distrileco.xlsx");
+        XLSX.writeFile(wb, "Reporte_Contable_Caucasia.xlsx");
     }
 
-    // FORMATO 2: Factura Individual Estilizada
-    function exportarFacturaUnica(index) {
+    function exportarFacturaIndividual(index) {
         const v = ventas[index];
         const dataFactura = [
-            ["DISTRILECO S.A.S"],
-            [" Armenia, Antioquia, Colombia"],
-            ["NIT: 900.000.000-1"],
+            ["DISTRILECO CAUCASIA SAS"],
+            ["NIT: 800183056-9"],
+            ["Contacto: 3206134987"],
+            ["Caucasia, Antioquia, Colombia"],
             [""],
             ["FACTURA DE VENTA"],
             ["Fecha:", v.fecha],
@@ -180,10 +181,11 @@
             ["Dirección:", v.direccion],
             ["Celular:", v.celular],
             [""],
-            ["DESCRIPCIÓN", "CANTIDAD", "PRODUCTO"],
-            ["Venta Masiva", v.cantidad, v.producto],
+            ["CANTIDAD", "DESCRIPCIÓN", "PRODUCTO"],
+            [v.cantidad, "Paquetes 500g", v.producto],
             [""],
-            ["Gracias por su compra."]
+            ["¡Gracias por preferir SUPER ARROZ!"],
+            ["DISTRILECO CAUCASIA SAS - Calidad y Servicio"]
         ];
 
         const ws = XLSX.utils.aoa_to_sheet(dataFactura);
@@ -197,7 +199,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = "backup_distrileco.json";
+        a.download = "backup_caucasia.json";
         a.click();
     }
 
