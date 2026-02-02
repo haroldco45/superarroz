@@ -3,146 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DISTRILECO - Ventas SUPER ARROZ</title>
+    <title>DISTRILECO - App de Ventas</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #0056b3; --secondary: #e63946; --light: #f8f9fa; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--light); }
-        header { background: white; padding: 1rem; text-align: center; border-bottom: 3px solid var(--primary); }
-        .logo { max-width: 150px; }
-        .container { max-width: 600px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .product-img { width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-send { background: #25d366; color: white; margin-top: 1rem; }
-        .btn-admin { background: #6c757d; color: white; margin-top: 2rem; }
-        .admin-section { display: none; margin-top: 2rem; border-top: 2px solid #eee; padding-top: 1rem; }
-        #reloj { font-size: 0.9rem; color: #666; margin-bottom: 1rem; text-align: right; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.8rem; }
+        :root { --primary: #0056b3; --secondary: #e63946; --light: #f4f7f6; --success: #25d366; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: var(--light); color: #333; }
+        
+        header { background: white; padding: 1.5rem; text-align: center; border-bottom: 4px solid var(--primary); shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .logo-principal { max-width: 180px; height: auto; margin-bottom: 10px; }
+        
+        .container { max-width: 500px; margin: 1.5rem auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        
+        #reloj { text-align: right; font-size: 0.85rem; color: #666; font-weight: bold; margin-bottom: 15px; }
+        
+        .product-card { text-align: center; border: 1px solid #eee; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .product-img { width: 100%; max-height: 250px; object-fit: contain; margin-bottom: 10px; }
+        
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.9rem; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        
+        button { width: 100%; padding: 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.3s; }
+        .btn-whatsapp { background: var(--success); color: white; margin-top: 10px; }
+        .btn-whatsapp:hover { background: #1eb954; }
+        
+        .btn-admin-toggle { background: #6c757d; color: white; margin-top: 30px; font-size: 0.8rem; padding: 8px; }
+        
+        .admin-panel { display: none; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px dashed #bbb; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.75rem; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #eee; }
     </style>
 </head>
 <body>
 
 <header>
-    <img src="logodistrileco.JPG" alt="Logo Distrileco" class="logo">
-    <h1>DISTRILECO S.A.S</h1>
+    <img src="logodistrileco.JPG" alt="DISTRILECO Logo" class="logo-principal">
+    <div style="color: var(--primary); font-weight: 800; letter-spacing: 1px;">DISTRILECO S.A.S</div>
 </header>
 
 <div class="container">
-    <div id="reloj">Cargando hora de Colombia...</div>
-    
-    <div style="text-align: center;">
-        <img src="sas.JPG" alt="Super Arroz" class="product-img" id="imgProducto">
-        <h2 id="nombreProd">SUPER ARROZ</h2>
+    <div id="reloj">Cargando hora...</div>
+
+    <div class="product-card">
+        <img src="sas.JPG" alt="SUPER ARROZ" class="product-img">
+        <h3 style="margin: 5px 0; color: var(--secondary);">SUPER ARROZ (500g)</h3>
+        <p style="font-size: 0.9rem; color: #666;">Distribución Nacional</p>
     </div>
 
     <div class="form-group">
-        <label>Nombre del Cliente:</label>
-        <input type="text" id="cliente" placeholder="Ej: Juan Pérez">
+        <label>Nombre Completo del Cliente:</label>
+        <input type="text" id="nombre" placeholder="Nombre y Apellido">
     </div>
+    
     <div class="form-group">
-        <label>Dirección:</label>
-        <input type="text" id="direccion" placeholder="Calle 123 #45-67">
+        <label>Dirección de Entrega:</label>
+        <input type="text" id="direccion" placeholder="Calle, Carrera, Barrio">
     </div>
+    
     <div class="form-group">
-        <label>Celular:</label>
-        <input type="tel" id="celular" placeholder="3110000000">
+        <label>Número de Celular:</label>
+        <input type="tel" id="celular" placeholder="300 000 0000">
     </div>
+    
     <div class="form-group">
-        <label>Cantidad (500g):</label>
+        <label>Cantidad de empaques:</label>
         <input type="number" id="cantidad" value="1" min="1">
     </div>
 
-    <button class="btn-send" onclick="registrarVenta()">Generar Venta y WhatsApp</button>
-    
-    <button class="btn-admin" onclick="toggleAdmin()">Panel Administrador</button>
+    <button class="btn-whatsapp" onclick="procesarPedido()">ENVIAR PEDIDO A WHATSAPP</button>
 
-    <div id="adminPanel" class="admin-section">
-        <h3>Gestión Administrativa</h3>
-        <button onclick="exportarExcel()" style="background: #1d6f42; color: white; margin-bottom: 5px;">Descargar Reporte Excel</button>
-        <button onclick="descargarBackup()" style="background: #007bff; color: white;">Descargar Backup JSON</button>
+    <button class="btn-admin-toggle" onclick="abrirAdmin()">Acceso Administrador</button>
+
+    <div id="adminPanel" class="admin-panel">
+        <h4 style="margin-top: 0;">Panel de Control</h4>
+        <button onclick="exportarFacturaExcel()" style="background: #1d6f42; color: white; margin-bottom: 8px;">Descargar Facturas (Excel)</button>
+        <button onclick="generarBackup()" style="background: #007bff; color: white;">Descargar Backup (JSON)</button>
         
-        <table id="tablaVentas">
-            <thead>
-                <tr>
-                    <th>Fecha/Hora</th>
-                    <th>Cliente</th>
-                    <th>Producto</th>
-                    <th>Cant</th>
-                </tr>
-            </thead>
-            <tbody id="listaVentas"></tbody>
-        </table>
+        <div style="overflow-x: auto;">
+            <table id="resumenVentas">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Cant.</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTabla"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
-    // Persistencia de datos
-    let ventas = JSON.parse(localStorage.getItem('ventasDistrileco')) || [];
+    // Inicialización de datos
+    let historialVentas = JSON.parse(localStorage.getItem('ventas_distrileco')) || [];
 
-    // Reloj Colombia
+    // Reloj tiempo real Colombia
     setInterval(() => {
-        const ahora = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
-        document.getElementById('reloj').innerText = "Colombia: " + ahora;
+        const opciones = { timeZone: "America/Bogota", hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+        const fecha = new Date().toLocaleDateString("es-CO", { timeZone: "America/Bogota" });
+        const hora = new Date().toLocaleTimeString("es-CO", opciones);
+        document.getElementById('reloj').innerText = `Colombia: ${fecha} | ${hora}`;
     }, 1000);
 
-    function registrarVenta() {
-        const cliente = document.getElementById('cliente').value;
+    function procesarPedido() {
+        const nombre = document.getElementById('nombre').value;
         const direccion = document.getElementById('direccion').value;
         const celular = document.getElementById('celular').value;
         const cantidad = document.getElementById('cantidad').value;
         const fechaHora = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
 
-        if(!cliente || !celular) return alert("Por favor llene los datos del cliente");
+        if (!nombre || !direccion || !celular) {
+            alert("Por favor, completa todos los datos del cliente.");
+            return;
+        }
 
-        const nuevaVenta = { fechaHora, cliente, direccion, celular, producto: "SUPER ARROZ 500g", cantidad };
-        ventas.push(nuevaVenta);
-        localStorage.setItem('ventasDistrileco', JSON.stringify(ventas));
+        // Guardar en la base de datos local
+        const nuevaVenta = { fechaHora, cliente: nombre, direccion, celular, producto: "SUPER ARROZ 500g", cantidad };
+        historialVentas.push(nuevaVenta);
+        localStorage.setItem('ventas_distrileco', JSON.stringify(historialVentas));
 
-        // Enviar a WhatsApp
-        const mensaje = `*DISTRILECO - NUEVO PEDIDO*%n*Fecha:* ${fechaHora}%n*Cliente:* ${cliente}%n*Dirección:* ${direccion}%n*Celular:* ${celular}%n*Producto:* SUPER ARROZ%n*Cantidad:* ${cantidad}`;
-        window.open(`https://wa.me/573117700431?text=${encodeURIComponent(mensaje.replace(/%n/g, '\n'))}`);
+        // Formatear mensaje para WhatsApp
+        const textoWA = `*NUEVO PEDIDO DISTRILECO*%n` +
+                        `--------------------------%n` +
+                        `*Fecha:* ${fechaHora}%n` +
+                        `*Cliente:* ${nombre}%n` +
+                        `*Dirección:* ${direccion}%n` +
+                        `*Celular:* ${celular}%n` +
+                        `*Producto:* SUPER ARROZ 500g%n` +
+                        `*Cantidad:* ${cantidad}%n` +
+                        `--------------------------`;
         
-        actualizarTabla();
-        alert("Venta registrada con éxito");
+        const urlWA = `https://wa.me/573117700431?text=${encodeURIComponent(textoWA.replace(/%n/g, '\n'))}`;
+        window.open(urlWA, '_blank');
+        
+        actualizarVistaAdmin();
+        alert("Pedido registrado y enviado.");
     }
 
-    function actualizarTabla() {
-        const tbody = document.getElementById('listaVentas');
-        tbody.innerHTML = "";
-        ventas.forEach(v => {
-            const fila = `<tr><td>${v.fechaHora}</td><td>${v.cliente}</td><td>${v.producto}</td><td>${v.cantidad}</td></tr>`;
-            tbody.innerHTML += fila;
+    function abrirAdmin() {
+        const clave = prompt("Ingrese la clave de administrador:");
+        if (clave === "1234") {
+            const panel = document.getElementById('adminPanel');
+            panel.style.display = (panel.style.display === "block") ? "none" : "block";
+            actualizarVistaAdmin();
+        } else {
+            alert("Clave incorrecta.");
+        }
+    }
+
+    function actualizarVistaAdmin() {
+        const cuerpo = document.getElementById('cuerpoTabla');
+        cuerpo.innerHTML = "";
+        historialVentas.slice().reverse().forEach(v => {
+            cuerpo.innerHTML += `<tr><td>${v.fechaHora}</td><td>${v.cliente}</td><td>${v.cantidad}</td></tr>`;
         });
     }
 
-    function exportarExcel() {
-        const ws = XLSX.utils.json_to_sheet(ventas);
+    function exportarFacturaExcel() {
+        if (historialVentas.length === 0) return alert("No hay ventas para exportar.");
+
+        const encabezado = [
+            ["DISTRILECO S.A.S"],
+            ["INFORME DE VENTAS Y FACTURACIÓN"],
+            ["Generado el: " + new Date().toLocaleString()],
+            [""],
+            ["FECHA/HORA", "CLIENTE", "DIRECCIÓN", "CELULAR", "PRODUCTO", "CANTIDAD"]
+        ];
+
+        const filasVentas = historialVentas.map(v => [
+            v.fechaHora, v.cliente.toUpperCase(), v.direccion, v.celular, v.producto, v.cantidad
+        ]);
+
+        const datosCompletos = encabezado.concat(filasVentas);
+        const ws = XLSX.utils.aoa_to_sheet(datosCompletos);
         const wb = XLSX.utils.book_new();
+
+        // Configurar anchos de columna
+        ws['!cols'] = [{wch:22}, {wch:25}, {wch:30}, {wch:15}, {wch:20}, {wch:10}];
+
         XLSX.utils.book_append_sheet(wb, ws, "Ventas");
-        XLSX.writeFile(wb, "Reporte_Ventas_Distrileco.xlsx");
+        XLSX.writeFile(wb, "Reporte_Facturas_Distrileco.xlsx");
     }
 
-    function descargarBackup() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(ventas));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", "backup_distrileco.json");
-        downloadAnchorNode.click();
-    }
-
-    function toggleAdmin() {
-        const panel = document.getElementById('adminPanel');
-        const pass = prompt("Ingrese clave de administrador:");
-        if(pass === "1234") { // Clave simple de ejemplo
-            panel.style.display = panel.style.display === "block" ? "none" : "block";
-            actualizarTabla();
-        } else {
-            alert("Acceso denegado");
-        }
+    function generarBackup() {
+        const blob = new Blob([JSON.stringify(historialVentas)], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "backup_distrileco_ventas.json";
+        a.click();
     }
 </script>
 
