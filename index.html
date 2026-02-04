@@ -19,17 +19,11 @@
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-bottom: 5px; }
         .btn-wa { background: var(--success); color: white; font-size: 1.1rem; }
-        .btn-wa:hover { background: #1eb954; }
         .btn-admin-toggle { background: var(--dark); color: white; margin-top: 20px; font-size: 0.8rem; opacity: 0.8; }
-        .admin-panel { display: none; margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; animation: fadeIn 0.5s; }
+        .admin-panel { display: none; margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; margin-top: 10px; background: white; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-        th { background: #f8f9fa; }
         .actions { display: flex; gap: 4px; }
-        .btn-edit { background: var(--warning); color: black; padding: 4px; width: auto; font-size: 0.7rem; }
-        .btn-del { background: var(--danger); color: white; padding: 4px; width: auto; font-size: 0.7rem; }
-        .btn-factura { background: #17a2b8; color: white; padding: 4px; width: auto; font-size: 0.7rem; }
-        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
     </style>
 </head>
 <body>
@@ -41,7 +35,7 @@
 </header>
 
 <div class="container">
-    <div id="reloj">Cargando hora de Colombia...</div>
+    <div id="reloj">Cargando hora...</div>
 
     <div class="product-card">
         <img src="sas.JPG" alt="SUPER ARROZ" class="product-img">
@@ -50,41 +44,31 @@
 
     <div class="form-group">
         <label>Nombre del Cliente:</label>
-        <input type="text" id="nombre" placeholder="Nombre completo o negocio">
+        <input type="text" id="nombre" placeholder="Nombre completo">
     </div>
     <div class="form-group">
-        <label>Dirección de Entrega:</label>
-        <input type="text" id="direccion" placeholder="Barrio, Calle y Carrera">
+        <label>Dirección:</label>
+        <input type="text" id="direccion" placeholder="Dirección de entrega">
     </div>
     <div class="form-group">
-        <label>Celular del Cliente:</label>
+        <label>Celular:</label>
         <input type="tel" id="celular" placeholder="Número de contacto">
     </div>
     <div class="form-group">
-        <label>Cantidad (Paquetes):</label>
+        <label>Cantidad:</label>
         <input type="number" id="cantidad" value="1" min="1">
     </div>
 
-    <button class="btn-wa" onclick="registrarPedido()">📦 ENVIAR PEDIDO Y ACTIVAR ALARMA</button>
+    <button class="btn-wa" id="btnPedido" onclick="registrarPedido()">📦 ENVIAR Y ACTIVAR PITAZO</button>
     
     <button class="btn-admin-toggle" onclick="verificarAdmin()">⚙️ PANEL ADMINISTRADOR</button>
 
     <div id="adminPanel" class="admin-panel">
-        <h3 style="margin-top:0;">Gestión de Pedidos</h3>
-        <div style="display:flex; gap:5px; margin-bottom:10px;">
-            <button onclick="exportarReporte()" style="background: #1d6f42; color: white; font-size: 0.8rem;">Excel General</button>
-            <button onclick="hacerBackup()" style="background: #007bff; color: white; font-size: 0.8rem;">Backup Datos</button>
-        </div>
-        
+        <button onclick="exportarReporte()" style="background: #1d6f42; color: white;">Excel General</button>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
-                    <tr>
-                        <th>Fecha/Hora</th>
-                        <th>Cliente</th>
-                        <th>Cant</th>
-                        <th>Acciones</th>
-                    </tr>
+                    <tr><th>Fecha</th><th>Cliente</th><th>Cant</th><th>Acciones</th></tr>
                 </thead>
                 <tbody id="tablaCuerpo"></tbody>
             </table>
@@ -92,12 +76,15 @@
     </div>
 </div>
 
-<script>
-    // Configuración Inicial
-    let ventas = JSON.parse(localStorage.getItem('db_caucasia_v3')) || [];
-    const pitazoAlarma = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+<audio id="sonidoAlarma" preload="auto">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+</audio>
 
-    // Reloj Tiempo Real Colombia
+<script>
+    let ventas = JSON.parse(localStorage.getItem('db_caucasia_v4')) || [];
+    const audio = document.getElementById('sonidoAlarma');
+
+    // Reloj Colombia
     setInterval(() => {
         const fecha = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
         document.getElementById('reloj').innerText = "🇨🇴 " + fecha;
@@ -110,33 +97,40 @@
         const cantidad = document.getElementById('cantidad').value;
         const fecha = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
 
-        if(!nombre || !celular || !direccion) return alert("Socio, por favor completa todos los datos del cliente.");
+        if(!nombre || !celular) return alert("Socio, llene los datos.");
 
-        // Guardar pedido
-        const nuevoPedido = { id: Date.now(), fecha, nombre, direccion, celular, producto: "SUPER ARROZ", cantidad };
-        ventas.push(nuevoPedido);
-        localStorage.setItem('db_caucasia_v3', JSON.stringify(ventas));
+        // Intentar reproducir un segundo de silencio para "despertar" el audio en el cel
+        audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(e => console.log("Audio esperando interacción"));
 
-        // Enviar a WhatsApp
-        const msg = `*DISTRILECO CAUCASIA SAS*%n*NUEVO PEDIDO:* SUPER ARROZ%n*CLIENTE:* ${nombre}%n*DIRECCIÓN:* ${direccion}%n*TEL:* ${celular}%n*CANTIDAD:* ${cantidad}%n*FECHA:* ${fecha}`;
+        const pedido = { id: Date.now(), fecha, nombre, direccion, celular, producto: "SUPER ARROZ", cantidad };
+        ventas.push(pedido);
+        localStorage.setItem('db_caucasia_v4', JSON.stringify(ventas));
+
+        // Enviar WhatsApp
+        const msg = `*DISTRILECO CAUCASIA SAS*%n*PEDIDO:* SUPER ARROZ%n*CLIENTE:* ${nombre}%n*TEL:* ${celular}%n*FECHA:* ${fecha}`;
         window.open(`https://wa.me/573117700431?text=${encodeURIComponent(msg.replace(/%n/g, '\n'))}`);
 
-        // ALARMA DE 15 MINUTOS (900,000 ms)
-        alert("¡Pedido registrado! Te daré un pitazo en 15 minutos para recordar el despacho.");
+        // PROGRAMAR PITAZO EN 15 MINUTOS (900000 ms)
+        // Para probar en 10 segundos, cambia 900000 por 10000
         setTimeout(() => {
-            pitazoAlarma.play();
-            alert("🚨 ¡ATENCIÓN SOCIO! Han pasado 15 minutos. Revisa si ya despachaste el pedido de: " + nombre);
+            ejecutarAlarma(nombre);
         }, 900000); 
 
+        alert("¡Pedido registrado! El pitazo sonará en 15 minutos.");
         limpiarYActualizar();
     }
 
+    function ejecutarAlarma(cliente) {
+        audio.play(); // Suena el pitazo
+        // Vibración si es celular
+        if (navigator.vibrate) { navigator.vibrate([500, 200, 500]); }
+        alert("🚨 PITAZO DISTRILECO: Revisa el pedido de " + cliente + ". ¿Ya lo despachaste?");
+    }
+
     function verificarAdmin() {
-        if(prompt("Clave de Administrador:") === "1234") {
+        if(prompt("Clave:") === "1234") {
             document.getElementById('adminPanel').style.display = "block";
             actualizarTabla();
-        } else {
-            alert("Clave incorrecta.");
         }
     }
 
@@ -144,83 +138,23 @@
         const cuerpo = document.getElementById('tablaCuerpo');
         cuerpo.innerHTML = "";
         ventas.slice().reverse().forEach((v, index) => {
-            // El index real en el array 'ventas' original
-            const realIndex = ventas.length - 1 - index;
-            cuerpo.innerHTML += `
-                <tr>
-                    <td>${v.fecha}</td>
-                    <td>${v.nombre}</td>
-                    <td>${v.cantidad}</td>
-                    <td class="actions">
-                        <button class="btn-edit" onclick="editarReg(${realIndex})">✎</button>
-                        <button class="btn-del" onclick="borrarReg(${realIndex})">X</button>
-                        <button class="btn-factura" onclick="descargarFactura(${realIndex})">Excel</button>
-                    </td>
-                </tr>`;
+            const realIdx = ventas.length - 1 - index;
+            cuerpo.innerHTML += `<tr><td>${v.fecha}</td><td>${v.nombre}</td><td>${v.cantidad}</td><td><button onclick="descargarFactura(${realIdx})">Factura</button></td></tr>`;
         });
     }
 
-    function editarReg(i) {
-        const n = prompt("Editar nombre:", ventas[i].nombre);
-        const c = prompt("Editar cantidad:", ventas[i].cantidad);
-        if(n !== null) {
-            ventas[i].nombre = n;
-            ventas[i].cantidad = c;
-            localStorage.setItem('db_caucasia_v3', JSON.stringify(ventas));
-            actualizarTabla();
-        }
-    }
-
-    function borrarReg(i) {
-        if(confirm("¿Eliminar este pedido del historial?")) {
-            ventas.splice(i, 1);
-            localStorage.setItem('db_caucasia_v3', JSON.stringify(ventas));
-            actualizarTabla();
-        }
-    }
-
-    // FORMATO 1: Reporte Contable
-    function exportarReporte() {
-        const ws = XLSX.utils.json_to_sheet(ventas);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Ventas");
-        XLSX.writeFile(wb, "Reporte_General_Caucasia.xlsx");
-    }
-
-    // FORMATO 2: Factura Estilizada para DISTRILECO CAUCASIA SAS
     function descargarFactura(i) {
         const v = ventas[i];
-        const contenidoFactura = [
-            ["DISTRILECO CAUCASIA SAS"],
-            ["NIT: 800183056-9"],
-            ["Cel: 3206134987"],
-            ["Caucasia, Antioquia"],
-            [""],
-            ["FACTURA DE VENTA INDIVIDUAL"],
-            ["Fecha:", v.fecha],
-            [""],
-            ["CLIENTE:", v.nombre.toUpperCase()],
-            ["DIRECCIÓN:", v.direccion],
-            ["CELULAR:", v.celular],
-            [""],
-            ["CANTIDAD", "DESCRIPCIÓN", "PRODUCTO"],
-            [v.cantidad, "Paquetes de 500g", v.producto],
-            [""],
-            ["Gracias por su compra. SUPER ARROZ es calidad."],
-            ["Despachado por DISTRILECO CAUCASIA SAS"]
+        const cont = [
+            ["DISTRILECO CAUCASIA SAS"], ["NIT: 800183056-9"], ["Cel: 3206134987"], [""],
+            ["FACTURA INDIVIDUAL"], ["Fecha:", v.fecha], [""],
+            ["CLIENTE:", v.nombre.toUpperCase()], ["DIRECCIÓN:", v.direccion], ["CEL:", v.celular], [""],
+            ["PRODUCTO", "CANT"], [v.producto, v.cantidad]
         ];
-
-        const ws = XLSX.utils.aoa_to_sheet(contenidoFactura);
+        const ws = XLSX.utils.aoa_to_sheet(cont);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Factura");
-        XLSX.writeFile(wb, `Factura_${v.nombre.replace(/ /g, "_")}.xlsx`);
-    }
-
-    function hacerBackup() {
-        const blob = new Blob([JSON.stringify(ventas)], {type: "application/json"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = "backup_ventas_caucasia.json"; a.click();
+        XLSX.writeFile(wb, `Factura_${v.nombre}.xlsx`);
     }
 
     function limpiarYActualizar() {
