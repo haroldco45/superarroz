@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DISTRILECO CAUCASIA SAS - Gestión Total</title>
+    <title>DISTRILECO CAUCASIA SAS - Gestión con Observaciones</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #0056b3; --success: #25d366; --danger: #e63946; --warning: #ffc107; --dark: #2c3e50; }
@@ -16,7 +16,8 @@
         .product-img { width: 100%; max-height: 180px; object-fit: contain; }
         .form-group { margin-bottom: 0.8rem; }
         label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem; }
-        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        textarea { resize: vertical; min-height: 60px; }
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-bottom: 5px; }
         .btn-wa { background: var(--success); color: white; font-size: 1.1rem; }
         .btn-admin-toggle { background: var(--dark); color: white; margin-top: 20px; font-size: 0.8rem; }
@@ -24,9 +25,9 @@
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
         .actions { display: flex; gap: 4px; }
-        .btn-edit { background: var(--warning); color: black; padding: 4px; width: auto; font-size: 0.7rem; }
-        .btn-del { background: var(--danger); color: white; padding: 4px; width: auto; font-size: 0.7rem; }
-        .btn-fact { background: #17a2b8; color: white; padding: 4px; width: auto; font-size: 0.7rem; }
+        .btn-edit { background: var(--warning); color: black; padding: 4px; width: auto; }
+        .btn-del { background: var(--danger); color: white; padding: 4px; width: auto; }
+        .btn-fact { background: #17a2b8; color: white; padding: 4px; width: auto; }
     </style>
 </head>
 <body>
@@ -54,6 +55,10 @@
         <input type="text" id="direccion" placeholder="Dirección de entrega">
     </div>
     <div class="form-group">
+        <label>Observaciones:</label>
+        <textarea id="observaciones" placeholder="Ej: Traer cambio de $50.000, dejar en portería..."></textarea>
+    </div>
+    <div class="form-group">
         <label>Celular:</label>
         <input type="tel" id="celular" placeholder="Número de contacto">
     </div>
@@ -73,7 +78,7 @@
         <div style="overflow-x: auto;">
             <table>
                 <thead>
-                    <tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Acciones</th></tr>
+                    <tr><th>N°</th><th>Cliente</th><th>Obs.</th><th>Acciones</th></tr>
                 </thead>
                 <tbody id="tablaCuerpo"></tbody>
             </table>
@@ -86,7 +91,7 @@
 </audio>
 
 <script>
-    let ventas = JSON.parse(localStorage.getItem('db_caucasia_final_v1')) || [];
+    let ventas = JSON.parse(localStorage.getItem('db_caucasia_obs_v1')) || [];
     const audio = document.getElementById('sonidoAlarma');
 
     setInterval(() => {
@@ -97,21 +102,23 @@
     function registrarPedido() {
         const nombre = document.getElementById('nombre').value;
         const direccion = document.getElementById('direccion').value;
+        const observaciones = document.getElementById('observaciones').value;
         const celular = document.getElementById('celular').value;
         const cantidad = document.getElementById('cantidad').value;
         const fecha = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
 
-        if(!nombre || !celular) return alert("Socio, llene los datos.");
+        if(!nombre || !celular) return alert("Socio, llene los datos básicos.");
 
         audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(e => {});
 
         const numPedido = ventas.length + 1;
-        const pedido = { numero: numPedido, fecha, nombre, direccion, celular, producto: "SUPER ARROZ", cantidad };
+        const pedido = { numero: numPedido, fecha, nombre, direccion, observaciones, celular, producto: "SUPER ARROZ", cantidad };
         
         ventas.push(pedido);
-        localStorage.setItem('db_caucasia_final_v1', JSON.stringify(ventas));
+        localStorage.setItem('db_caucasia_obs_v1', JSON.stringify(ventas));
 
-        const msg = `*DISTRILECO CAUCASIA SAS*%n*PEDIDO N°:* ${numPedido}%n*CLIENTE:* ${nombre}%n*TEL:* ${celular}%n*FECHA:* ${fecha}`;
+        // WHATSAPP CON OBSERVACIONES
+        const msg = `*DISTRILECO CAUCASIA SAS*%n*PEDIDO N°:* ${numPedido}%n*CLIENTE:* ${nombre}%n*DIR:* ${direccion}%n*OBS:* ${observaciones || 'Ninguna'}%n*TEL:* ${celular}%n*CANT:* ${cantidad}%n*FECHA:* ${fecha}`;
         window.open(`https://wa.me/573117700431?text=${encodeURIComponent(msg.replace(/%n/g, '\n'))}`);
 
         setTimeout(() => {
@@ -138,26 +145,26 @@
             cuerpo.innerHTML += `
                 <tr>
                     <td><b>${v.numero}</b></td>
-                    <td>${v.fecha}</td>
                     <td>${v.nombre}</td>
+                    <td>${v.observaciones || '-'}</td>
                     <td class="actions">
                         <button class="btn-edit" onclick="editarPedido(${realIdx})">✎</button>
                         <button class="btn-del" onclick="borrarPedido(${realIdx})">X</button>
-                        <button class="btn-fact" onclick="descargarFactura(${realIdx})">Inv</button>
+                        <button class="btn-fact" onclick="descargarFactura(${realIdx})">Excel</button>
                     </td>
                 </tr>`;
         });
     }
 
     function editarPedido(i) {
-        const n = prompt("Nombre del Cliente:", ventas[i].nombre);
+        const n = prompt("Nombre:", ventas[i].nombre);
         const d = prompt("Dirección:", ventas[i].direccion);
-        const c = prompt("Cantidad:", ventas[i].cantidad);
+        const o = prompt("Observaciones:", ventas[i].observaciones);
         if(n !== null) {
             ventas[i].nombre = n;
             ventas[i].direccion = d;
-            ventas[i].cantidad = c;
-            localStorage.setItem('db_caucasia_final_v1', JSON.stringify(ventas));
+            ventas[i].observaciones = o;
+            localStorage.setItem('db_caucasia_obs_v1', JSON.stringify(ventas));
             actualizarTabla();
         }
     }
@@ -165,7 +172,7 @@
     function borrarPedido(i) {
         if(confirm("¿Eliminar pedido N° " + ventas[i].numero + "?")) {
             ventas.splice(i, 1);
-            localStorage.setItem('db_caucasia_final_v1', JSON.stringify(ventas));
+            localStorage.setItem('db_caucasia_obs_v1', JSON.stringify(ventas));
             actualizarTabla();
         }
     }
@@ -182,7 +189,8 @@
         const cont = [
             ["DISTRILECO CAUCASIA SAS"], ["NIT: 800183056-9"], ["Cel: 3206134987"], [""],
             ["FACTURA DE VENTA N°: " + v.numero], ["Fecha:", v.fecha], [""],
-            ["CLIENTE:", v.nombre.toUpperCase()], ["DIRECCIÓN:", v.direccion], ["CEL:", v.celular], [""],
+            ["CLIENTE:", v.nombre.toUpperCase()], ["DIRECCIÓN:", v.direccion], 
+            ["OBSERVACIONES:", v.observaciones || "Ninguna"], ["CEL:", v.celular], [""],
             ["CANTIDAD", "PRODUCTO"], [v.cantidad, v.producto]
         ];
         const ws = XLSX.utils.aoa_to_sheet(cont);
@@ -201,6 +209,7 @@
     function limpiarYActualizar() {
         document.getElementById('nombre').value = "";
         document.getElementById('direccion').value = "";
+        document.getElementById('observaciones').value = "";
         document.getElementById('celular').value = "";
         document.getElementById('cantidad').value = 1;
         actualizarTabla();
